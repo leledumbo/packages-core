@@ -1,0 +1,67 @@
+diff -Naur a/drivers/cpufreq/cpufreq_ondemand.c b/drivers/cpufreq/cpufreq_ondemand.c
+--- a/drivers/cpufreq/cpufreq_ondemand.c	2016-04-04 08:26:26.000000000 +1000
++++ b/drivers/cpufreq/cpufreq_ondemand.c	2016-04-17 22:44:33.014580782 +1000
+@@ -20,7 +20,7 @@
+ 
+ /* On-demand governor macros */
+ #define DEF_FREQUENCY_UP_THRESHOLD		(80)
+-#define DEF_SAMPLING_DOWN_FACTOR		(1)
++#define DEF_SAMPLING_DOWN_FACTOR		(10)
+ #define MAX_SAMPLING_DOWN_FACTOR		(100000)
+ #define MICRO_FREQUENCY_UP_THRESHOLD		(95)
+ #define MICRO_FREQUENCY_MIN_SAMPLE_RATE		(10000)
+diff -Naur a/kernel/sched/fair.c b/kernel/sched/fair.c
+--- a/kernel/sched/fair.c	2016-04-04 08:26:26.000000000 +1000
++++ b/kernel/sched/fair.c	2016-04-17 22:48:04.777612131 +1000
+@@ -47,8 +47,8 @@
+  * (to see the precise effective timeslice length of your workload,
+  *  run vmstat and monitor the context-switches (cs) field)
+  */
+-unsigned int sysctl_sched_latency = 6000000ULL;
+-unsigned int normalized_sysctl_sched_latency = 6000000ULL;
++unsigned int sysctl_sched_latency = 3000000ULL;
++unsigned int normalized_sysctl_sched_latency = 3000000ULL;
+ 
+ /*
+  * The initial- and re-scaling of tunables is configurable
+@@ -66,13 +66,13 @@
+  * Minimal preemption granularity for CPU-bound tasks:
+  * (default: 0.75 msec * (1 + ilog(ncpus)), units: nanoseconds)
+  */
+-unsigned int sysctl_sched_min_granularity = 750000ULL;
+-unsigned int normalized_sysctl_sched_min_granularity = 750000ULL;
++unsigned int sysctl_sched_min_granularity = 300000ULL;
++unsigned int normalized_sysctl_sched_min_granularity = 300000ULL;
+ 
+ /*
+  * is kept at sysctl_sched_latency / sysctl_sched_min_granularity
+  */
+-static unsigned int sched_nr_latency = 8;
++static unsigned int sched_nr_latency = 10;
+ 
+ /*
+  * After fork, child runs first. If set to 0 (default) then
+@@ -88,10 +88,10 @@
+  * and reduces their over-scheduling. Synchronous workloads will still
+  * have immediate wakeup/sleep latencies.
+  */
+-unsigned int sysctl_sched_wakeup_granularity = 1000000UL;
+-unsigned int normalized_sysctl_sched_wakeup_granularity = 1000000UL;
++unsigned int sysctl_sched_wakeup_granularity = 500000UL;
++unsigned int normalized_sysctl_sched_wakeup_granularity = 500000UL;
+ 
+-const_debug unsigned int sysctl_sched_migration_cost = 500000UL;
++const_debug unsigned int sysctl_sched_migration_cost = 250000UL;
+ 
+ /*
+  * The exponential sliding  window over which load is averaged for shares
+@@ -111,7 +111,7 @@
+  *
+  * default: 5 msec, units: microseconds
+   */
+-unsigned int sysctl_sched_cfs_bandwidth_slice = 5000UL;
++unsigned int sysctl_sched_cfs_bandwidth_slice = 3000UL;
+ #endif
+ 
+ static inline void update_load_add(struct load_weight *lw, unsigned long inc)
+

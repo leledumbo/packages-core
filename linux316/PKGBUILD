@@ -70,6 +70,9 @@ source=("https://www.kernel.org/pub/linux/kernel/v3.x/linux-${_basekernel}.tar.x
         '3.16.7.25.patch'
         '3.16.7.26.patch'
         '3.16.7.27.patch'
+        # MANJARO Patches
+        '600hz-kernel.patch'
+        'zen-cpu-20160420.patch'
 )
 sha256sums=('4813ad7927a7d92e5339a873ab16201b242b2748934f12cb5df9ba2cfe1d77a0'
             '7e2bbcbbff818e8839a2919fbc208762618498ed56337ab3f20be31c187105ab'
@@ -118,7 +121,9 @@ sha256sums=('4813ad7927a7d92e5339a873ab16201b242b2748934f12cb5df9ba2cfe1d77a0'
             'bed6e05968db8e09000c335f22fda3a9f323cb77fde9e2637622cf32b42c3a96'
             '29ac1ab0087bfab47bd95c129bcfa17685552dc34a1eb346dbfcc36c21796cd6'
             'ad740beb38e897042ffaa5107dce73d86e39ca1bbfa7eb13d18e2cdd5c6c3922'
-            '58ebe4e0c2db82eddc77024f4d52ad3b021a0d4b49db026f9f535a6b3de8008f')
+            '58ebe4e0c2db82eddc77024f4d52ad3b021a0d4b49db026f9f535a6b3de8008f'
+            '2a132bb65c31a09d5b0f00602033c45b81e45caf3f6ffb3d80e61cc4668a68fc'
+            '2107816b60248f4b9d2e87a03b6bdadde4372c133e7973f65b391865994efe18')
 
 prepare() {
    cd "${srcdir}/linux-${_basekernel}"
@@ -184,12 +189,21 @@ prepare() {
   patch -Np1 -i "${srcdir}/0001-block-cgroups-kconfig-build-bits-for-BFQ-${_bfq}.patch"
   patch -Np1 -i "${srcdir}/0002-block-introduce-the-BFQ-${_bfq}-I-O-sched.patch"
   patch -Np1 -i "${srcdir}/0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}.patch"
+  
+  # add Zen CPU scheduler and frequency governor settings
+  patch -Np1 -i "${srcdir}/zen-cpu-20160420.patch"
 
   if [ "${CARCH}" = "x86_64" ]; then
     cat "${srcdir}/config.x86_64" > ./.config
   else
     cat "${srcdir}/config" > ./.config
   fi
+  
+  # add and set 600Hz interrupt frequency
+  patch -Np1 -i "${srcdir}/600hz-kernel.patch"
+  sed -i "s|CONFIG_HZ_300=y|# CONFIG_HZ_300 is not set|g" ./.config
+  sed -i "s|CONFIG_HZ=300|CONFIG_HZ=600|g" ./.config
+  echo "CONFIG_HZ_600=y" >> ./.config
 
   cat "${srcdir}/config.aufs" >> ./.config
 

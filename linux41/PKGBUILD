@@ -43,6 +43,8 @@ source=("https://www.kernel.org/pub/linux/kernel/v4.x/linux-${_basekernel}.tar.x
         'change-default-console-loglevel.patch'
         # Manjaro Patches
         '0001-ovl-dont-traverse-automount-points.patch::https://github.com/torvalds/linux/commit/a6f15d9a756571babbb2b2cd4fdd1b64a5de232b.patch'
+        '600hz-kernel.patch'
+        'zen-cpu-20160420.patch'
         # Not exactly the same as https://github.com/torvalds/linux/commit/7c03b5d45b8eebf0111125053d8fe887cc262ba6
         '0002-ovl-allow-distributed-fs-as-lower-layer.patch'
         '0003-ovl-fix-open-in-stacked-overlay.patch::https://github.com/torvalds/linux/commit/1c8a47df36d72ace8cf78eb6c228aa0f8027d3c2.patch'
@@ -68,6 +70,8 @@ sha256sums=('caf51f085aac1e1cea4d00dbbf3093ead07b551fc07b31b2a989c05f8ea72d9f'
             '4f30f76adbdf49aec8d41ac27ad212734500c272f3cba594f134a7bc263820d9'
             '44e7e15c95af9676f715569e72688fd64304a70d2854b0f804c156d4961c72c0'
             '55431bdbb2b099a92f8a5848e63be1906b87763e24584b1c7f322f5fd1340a96'
+            '2a132bb65c31a09d5b0f00602033c45b81e45caf3f6ffb3d80e61cc4668a68fc'
+            '2107816b60248f4b9d2e87a03b6bdadde4372c133e7973f65b391865994efe18'
             '6bb3f7a4119230c61e68a51f4233dc4dcf82af2cf62c753e7d9753b52eec2aa9'
             '1d3bfab9203e6e773044a40ad229d524bcd50714aa8b6160a62224071cb2f85b')
 
@@ -111,12 +115,21 @@ prepare() {
   patch -Np1 -i "${srcdir}/0001-block-cgroups-kconfig-build-bits-for-BFQ-${_bfq}.patch"
   patch -Np1 -i "${srcdir}/0002-block-introduce-the-BFQ-${_bfq}-I-O-sched.patch"
   patch -Np1 -i "${srcdir}/0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}.patch"
+  
+  # add Zen CPU scheduler and frequency governor settings
+  patch -Np1 -i "${srcdir}/zen-cpu-20160420.patch"
 
   if [ "${CARCH}" = "x86_64" ]; then
     cat "${srcdir}/config.x86_64" > ./.config
   else
     cat "${srcdir}/config" > ./.config
   fi
+  
+  # add and set 600Hz interrupt frequency
+  patch -Np1 -i "${srcdir}/600hz-kernel.patch"
+  sed -i "s|CONFIG_HZ_300=y|# CONFIG_HZ_300 is not set|g" ./.config
+  sed -i "s|CONFIG_HZ=300|CONFIG_HZ=600|g" ./.config
+  echo "CONFIG_HZ_600=y" >> ./.config
 
   cat "${srcdir}/config.aufs" >> ./.config
 

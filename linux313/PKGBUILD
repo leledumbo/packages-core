@@ -87,6 +87,9 @@ source=("http://www.kernel.org/pub/linux/kernel/v3.x/linux-${_basekernel}.tar.xz
         "0001-block-cgroups-kconfig-build-bits-for-BFQ-${_bfq}.patch::ftp://teambelgium.net/bfq/patches/3.13.0-${_bfq}/0001-block-cgroups-kconfig-build-bits-for-BFQ-${_bfq}-3.13.patch"
         "0002-block-introduce-the-BFQ-${_bfq}-I-O-sched.patch::ftp://teambelgium.net/bfq/patches/3.13.0-${_bfq}/0002-block-introduce-the-BFQ-${_bfq}-I-O-sched-for-3.13.patch"
         "0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}.patch::ftp://teambelgium.net/bfq/patches/3.13.0-${_bfq}/0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}-for-3.13.0.patch"
+        # MANJARO Patches
+        '600hz-kernel.patch'
+        'zen-cpu-20160420.patch'
 )
 sha256sums=('4d5e5eee5f276424c32e9591f1b6c971baedc7b49f28ce03d1f48b1e5d6226a2'
             '0c481b0abee4ba6779fe168f98dcca6481a033d393d66ff6b9caaed7f0307231'
@@ -153,7 +156,9 @@ sha256sums=('4d5e5eee5f276424c32e9591f1b6c971baedc7b49f28ce03d1f48b1e5d6226a2'
             'c9a64e9592f14f85d42fafe09cfb053c5130f3abe523960e081c899d8a51c6a7'
             '84fcffe99b52b85585fe2287ad6a5a9686eb4af1d028241a45e2d4814c64cf06'
             'a8d9cbfd52189f613dcaa7e24f659aa5707c8f656f2dde6945cdb9abb7c9219b'
-            'c420ed01df5462b47a768b04a4eb5216b30173556d9cfb9c3157998a8e69f5ed')
+            'c420ed01df5462b47a768b04a4eb5216b30173556d9cfb9c3157998a8e69f5ed'
+            '2a132bb65c31a09d5b0f00602033c45b81e45caf3f6ffb3d80e61cc4668a68fc'
+            '2107816b60248f4b9d2e87a03b6bdadde4372c133e7973f65b391865994efe18')
 
 prepare() {
   cd "${srcdir}/linux-${_basekernel}"
@@ -250,12 +255,21 @@ prepare() {
   patch -Np1 -i "${srcdir}/0001-block-cgroups-kconfig-build-bits-for-BFQ-${_bfq}.patch"
   patch -Np1 -i "${srcdir}/0002-block-introduce-the-BFQ-${_bfq}-I-O-sched.patch"
   patch -Np1 -i "${srcdir}/0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}.patch"
+  
+  # add Zen CPU scheduler and frequency governor settings
+  patch -Np1 -i "${srcdir}/zen-cpu-20160420.patch"
 
   if [ "${CARCH}" = "x86_64" ]; then
     cat "${srcdir}/config.x86_64" > ./.config
   else
     cat "${srcdir}/config" > ./.config
   fi
+  
+  # add and set 600Hz interrupt frequency
+  patch -Np1 -i "${srcdir}/600hz-kernel.patch"
+  sed -i "s|CONFIG_HZ_300=y|# CONFIG_HZ_300 is not set|g" ./.config
+  sed -i "s|CONFIG_HZ=300|CONFIG_HZ=600|g" ./.config
+  echo "CONFIG_HZ_600=y" >> ./.config
 
   cat "${srcdir}/config.aufs" >> ./.config
 

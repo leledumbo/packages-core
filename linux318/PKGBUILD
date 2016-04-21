@@ -41,6 +41,9 @@ source=("https://www.kernel.org/pub/linux/kernel/v3.x/linux-${_basekernel}.tar.x
         "0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}.patch::http://algo.ing.unimo.it/people/paolo/disk_sched/patches/3.18.0-${_bfq}/0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}-for-3.18.0.patch"
         # ARCH Patches
         'change-default-console-loglevel.patch'
+        # MANJARO Patches
+        '600hz-kernel.patch'
+        'zen-cpu-20160420.patch'
 )
 sha256sums=('becc413cc9e6d7f5cc52a3ce66d65c3725bc1d1cc1001f4ce6c32b69eb188cbd'
             '662adba40afd4df9987a90e1b79af4b7d57895274a7032aeff5fd9922b1a4e73'
@@ -61,7 +64,9 @@ sha256sums=('becc413cc9e6d7f5cc52a3ce66d65c3725bc1d1cc1001f4ce6c32b69eb188cbd'
             'b44bc1dde3bf9c7f766583b12c47b99ce4dcd9deff5b8144ad72c3375ce05659'
             'e2c926a3f08fdcf4a3f1e200b7046346a7c85cf8093e1378469ad663148350a2'
             'e51cbeb8a42e719a2040762507ad0b27bffbde7559bf2a86e86980d4ec8979b6'
-            '44e7e15c95af9676f715569e72688fd64304a70d2854b0f804c156d4961c72c0')
+            '44e7e15c95af9676f715569e72688fd64304a70d2854b0f804c156d4961c72c0'
+            '2a132bb65c31a09d5b0f00602033c45b81e45caf3f6ffb3d80e61cc4668a68fc'
+            '2107816b60248f4b9d2e87a03b6bdadde4372c133e7973f65b391865994efe18')
 
 prepare() {
   cd "${srcdir}/linux-${_basekernel}"
@@ -100,12 +105,21 @@ prepare() {
   patch -Np1 -i "${srcdir}/0001-block-cgroups-kconfig-build-bits-for-BFQ-${_bfq}.patch"
   patch -Np1 -i "${srcdir}/0002-block-introduce-the-BFQ-${_bfq}-I-O-sched.patch"
   patch -Np1 -i "${srcdir}/0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}.patch"
+  
+  # add Zen CPU scheduler and frequency governor settings
+  patch -Np1 -i "${srcdir}/zen-cpu-20160420.patch"
 
   if [ "${CARCH}" = "x86_64" ]; then
     cat "${srcdir}/config.x86_64" > ./.config
   else
     cat "${srcdir}/config" > ./.config
   fi
+  
+  # add and set 600Hz interrupt frequency
+  patch -Np1 -i "${srcdir}/600hz-kernel.patch"
+  sed -i "s|CONFIG_HZ_300=y|# CONFIG_HZ_300 is not set|g" ./.config
+  sed -i "s|CONFIG_HZ=300|CONFIG_HZ=600|g" ./.config
+  echo "CONFIG_HZ_600=y" >> ./.config
 
   cat "${srcdir}/config.aufs" >> ./.config
 

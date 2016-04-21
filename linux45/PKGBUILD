@@ -45,6 +45,8 @@ source=(#"https://www.kernel.org/pub/linux/kernel/v4.x/linux-${_basekernel}.tar.
         'change-default-console-loglevel.patch'
         # MANJARO Patches
         'nvidia-304xx-mtrr-unknown-symbol.patch'
+        '600hz-kernel.patch'
+        'zen-cpu-20160420.patch'
 )
 sha256sums=('2454bde0da3619d33c7075286d4ff0336ec43c856ed6d3f3d603d06421bb77e4'
             'a9913a04ddbd06acde9b00b3179c41fddb99f61168ef5d01d3e8cf72385038b1'
@@ -66,7 +68,9 @@ sha256sums=('2454bde0da3619d33c7075286d4ff0336ec43c856ed6d3f3d603d06421bb77e4'
             'b17c3fb18c5b8c20a45a38198f293679ca6aef08d16f12cd816a5cfafac4b2c4'
             '69a21bc286a628128cfc4723558829cb6ff6c2d7c4dfd4468457898674187b25'
             '44e7e15c95af9676f715569e72688fd64304a70d2854b0f804c156d4961c72c0'
-            '3c158ebe93e3710d9a669015f0868f89c5170efdc36cb7cf5f46cc85df61ad3e')
+            '3c158ebe93e3710d9a669015f0868f89c5170efdc36cb7cf5f46cc85df61ad3e'
+            '2a132bb65c31a09d5b0f00602033c45b81e45caf3f6ffb3d80e61cc4668a68fc'
+            '2107816b60248f4b9d2e87a03b6bdadde4372c133e7973f65b391865994efe18')
 
 prepare() {
   cd "${srcdir}/linux-${_basekernel}"
@@ -102,6 +106,9 @@ prepare() {
   patch -Np1 -i "${srcdir}/0001-block-cgroups-kconfig-build-bits-for-BFQ-${_bfq}.patch"
   patch -Np1 -i "${srcdir}/0002-block-introduce-the-BFQ-${_bfq}-I-O-sched.patch"
   patch -Np1 -i "${srcdir}/0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-${_bfq}.patch"
+  
+  # add Zen CPU scheduler and frequency governor settings
+  patch -Np1 -i "${srcdir}/zen-cpu-20160420.patch"
 
   # Fix Nvidia 304xx issue
   # https://bugs.archlinux.org/task/47092
@@ -112,6 +119,12 @@ prepare() {
   else
     cat "${srcdir}/config" > ./.config
   fi
+  
+  # add and set 600Hz interrupt frequency
+  patch -Np1 -i "${srcdir}/600hz-kernel.patch"
+  sed -i "s|CONFIG_HZ_300=y|# CONFIG_HZ_300 is not set|g" ./.config
+  sed -i "s|CONFIG_HZ=300|CONFIG_HZ=600|g" ./.config
+  echo "CONFIG_HZ_600=y" >> ./.config
 
   cat "${srcdir}/config.aufs" >> ./.config
 
