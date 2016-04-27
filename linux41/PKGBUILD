@@ -13,7 +13,7 @@ _basekernel=4.1
 _basever=41
 _aufs=20160328
 _bfq=v7r8
-pkgver=${_basekernel}.22
+pkgver=${_basekernel}.23
 pkgrel=1
 arch=('i686' 'x86_64')
 url="http://www.kernel.org/"
@@ -21,7 +21,9 @@ license=('GPL2')
 makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc')
 options=('!strip')
 source=("https://www.kernel.org/pub/linux/kernel/v4.x/linux-${_basekernel}.tar.xz"
-        "http://www.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.xz"
+        #"http://www.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.xz"
+        "http://www.kernel.org/pub/linux/kernel/v4.x/patch-${_basekernel}.22.xz"
+	"patch-${_basekernel}.22-to-${pkgver}.patch::https://git.kernel.org/cgit/linux/kernel/git/sashal/linux-stable.git/patch/?id=refs/tags/v${pkgver}&id2=refs/tags/v${_basekernel}.22"
         # the main kernel config files
         'config' 'config.x86_64' 'config.aufs'
         # standard config files for mkinitcpio ramdisk
@@ -51,6 +53,7 @@ source=("https://www.kernel.org/pub/linux/kernel/v4.x/linux-${_basekernel}.tar.x
 )
 sha256sums=('caf51f085aac1e1cea4d00dbbf3093ead07b551fc07b31b2a989c05f8ea72d9f'
             '0d9411d7cc7b32ac17538885aa1d3861cd34af09637c1aa81b228d2e0a732956'
+            'cd04fe6c06b50585c31d8c1ddf4b2e53110ef9d3e3fb2f680fa7088e0ee9cf7b'
             'f3ad2809f5eda0b957d5bc09648260242aa8849ff00ae4eb116ff59cdaf8c5ec'
             'c6ecfeaf7edda6e152c1471b441e3d6dfa8be237c9186cc210b8abf906261df5'
             'd1cecc720df66c70f43bdb86e0169d6b756161c870db8d7d39c32c04dc36ed36'
@@ -79,7 +82,9 @@ prepare() {
   cd "${srcdir}/linux-${_basekernel}"
 
   # add upstream patch
-  patch -p1 -i "${srcdir}/patch-${pkgver}"
+  #patch -p1 -i "${srcdir}/patch-${pkgver}"
+  patch -p1 -i "${srcdir}/patch-${_basekernel}.22"
+  patch -p1 -i "${srcdir}/patch-${_basekernel}.22-to-${pkgver}.patch"
 
   # add latest fixes from stable queue, if needed
   # http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git
